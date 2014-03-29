@@ -94,7 +94,7 @@ int maxpacket = sizeof(outpack);
 
 static int broadcast_pings = 0;
 
-static char *pr_addr(__u32);
+char *pr_addr(__u32);
 static void pr_options(unsigned char * cp, int hlen);
 static void pr_iph(struct iphdr *ip);
 static void usage(void) __attribute__((noreturn));

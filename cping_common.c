@@ -60,7 +60,11 @@ int ident;			/* process id to identify our packets */
 
 static int screen_width = INT_MAX;
 
-static int checktimeout(int ours)
+char *pr_addr(__u32);
+
+extern struct sockaddr_in whereto;   /* who to ping */
+
+static int checktimeout(int ours, char *from)
 {
 // DRH---  NOT THREAD SAFE!
 	static int init=0;
@@ -87,14 +91,14 @@ static int checktimeout(int ours)
   	stime+=4;
 
 	if (ours==1) {
-		if (firstline==0) printf("%20.20s System responed to a ping.  Down for %f secs          \n", stime, ret/1000000.0);
+		if (firstline==0) printf("%20.20s System (%s) responed to a ping.  Down for %f secs          \n", stime, from, ret/1000000.0);
 		tmp=tvold;
 	 	tvold=tvnew;
 	 	tvnew=tmp;
 		firstline=1;
 	} else {
 		if ((tvnew->tv_sec - tvold->tv_sec)>2) {
-			printf("%20.20s Missing pings.  Down for %f secs          \r", stime, ret/1000000.0);
+			printf("%20.20s (%s) Missing pings.  Down for %f secs          \r", stime, from, ret/1000000.0);
 			fflush(stdout);
 			if (firstline) {
 				printf("\n");
@@ -651,7 +655,7 @@ void main_loop(int icmp_sock, __u8 *packet, int packlen)
 
 			if (cc < 0) {
 				if (errno == EAGAIN || errno == EINTR) {
-					checktimeout(0);
+					checktimeout(0, pr_addr(whereto.sin_addr.s_addr));
 					break;
 				}
 				if (!receive_error_msg()) {
@@ -683,15 +687,15 @@ void main_loop(int icmp_sock, __u8 *packet, int packlen)
 
 				not_ours = parse_reply(&msg, cc, addrbuf, recv_timep);
 				if (not_ours) {
-					checktimeout(0);
+					checktimeout(0, pr_addr(whereto.sin_addr.s_addr));
 				} else {
-					checktimeout(1);
+					checktimeout(1, pr_addr(whereto.sin_addr.s_addr));
 				}
 			}
 
 			/* See? ... someone runs another ping on this host. */ 
 			if (not_ours) {
-				checktimeout(0);
+				checktimeout(0, pr_addr(whereto.sin_addr.s_addr));
 				install_filter();
 			}
 
