@@ -5,7 +5,7 @@ A cooler version of ping that has a -F threshold in milliseconds option.  With -
 packets that miss the threshold are printed.  Also, if the target host goes down, the duration of the downtime
 is printed in summary.
 
-
+```
 $ cping -F 30 google.com
 
 You asked for only failed pings to be displayed.
@@ -20,8 +20,9 @@ PING google.com (173.194.46.69) 56(84) bytes of data.
 26 packets transmitted, 25 received, 3% packet loss, time 25012ms
 rtt min/avg/max/mdev = 23.964/27.200/41.342/3.688 ms
 
+```
 
-
+```
 $ cping -F 30 192.168.1.99
 
 You asked for only failed pings to be displayed.
@@ -31,3 +32,4 @@ Mar 28 23:47:43 2014 Missing pings.  Down for 2.998395 secs
 Mar 28 23:47:48 2014 Missing pings.  Down for 8.324291 secs
 --- 192.168.1.99 ping statistics ---
 12 packets transmitted, 0 received, +9 errors, 100% packet loss, time 10994ms
+```
