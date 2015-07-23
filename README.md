@@ -3,7 +3,7 @@ cping
 
 A cooler version of ping that has a -F threshold in milliseconds option.  With -F specified, only 
 packets that miss the threshold are printed.  Also, if the target host goes down, the duration of the downtime
-is printed in summary.  Also mutiple cpings can be run in the background (ie: ```cping -F 10 host &```) and the output will show which host missed a ping threshold.
+is printed in summary.  Also multiple cpings can be run in the background (ie: ```cping -F 10 host &```) and the output will show which host missed a ping threshold.
 
 ```
 $ cping -F 30 google.com
@@ -33,3 +33,12 @@ Mar 28 23:47:48 2014 Missing pings.  Down for 8.324291 secs
 --- 192.168.1.99 ping statistics ---
 12 packets transmitted, 0 received, +9 errors, 100% packet loss, time 10994ms
 ```
+
+## Install ##
+git clone this project
+
+### Linux ###
+The main folder, run make.
+
+### Mac OSX ###
+cd osx; make
