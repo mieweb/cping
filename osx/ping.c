@@ -221,6 +221,10 @@ int sweepincr = 1;		/* payload increment in sweep */
 int interval = 1000;		/* interval between packets, ms */
 int waittime = MAXWAIT;		/* timeout for each packet */
 long nrcvtimeout = 0;		/* # of packets we got back after waittime */
+int printmaxtime_ms = 0;/* threshold for all pings to get returned before reporting them */
+time_t downsince = 0;   /* time since last successful ping */
+time_t downtime = 0;    /* total cumulative time of missed pings */
+char *target;			/* host or ip entered on the command line */
 
 /* timing */
 int timing;			/* flag to do timing */
@@ -239,6 +243,7 @@ static void finish(void) __dead2;
 static void pinger(void);
 static char *pr_addr(struct in_addr);
 static char *pr_ntime(n_time);
+static char *timebufnow(char *, int, time_t);
 static void pr_icmph(struct icmp *);
 static void pr_iph(struct ip *);
 static void pr_pack(char *, int, struct sockaddr_in *, struct timeval *);
@@ -262,7 +267,7 @@ main(argc, argv)
 	struct sigaction si_sa;
 	size_t sz;
 	u_char *datap, packet[IP_MAXPACKET];
-	char *ep, *source, *target, *payload;
+	char *ep, *source, *payload;
 	struct hostent *hp;
 #ifdef IPSEC_POLICY_IPSEC
 	char *policy_in, *policy_out;
@@ -302,7 +307,7 @@ main(argc, argv)
 
 	outpack = outpackhdr + sizeof(struct ip);
 	while ((ch = getopt(argc, argv,
-		"Aab:c:DdfG:g:h:I:i:Ll:M:m:nop:QqRrS:s:T:t:vW:z:"
+		"Aab:c:DdF:fG:g:h:I:i:Ll:M:m:nop:QqRrS:s:T:t:vW:z:"
 #ifdef IPSEC
 #ifdef IPSEC_POLICY_IPSEC
 		"P:"
@@ -343,6 +348,9 @@ main(argc, argv)
 			break;
 		case 'd':
 			options |= F_SO_DEBUG;
+			break;
+		case 'F':
+			printmaxtime_ms = atoi(optarg);
 			break;
 		case 'f':
 			if (uid) {
@@ -816,6 +824,8 @@ main(argc, argv)
 	if (to->sin_family == AF_INET) {
 		(void)printf("PING %s (%s)", hostname,
 		    inet_ntoa(to->sin_addr));
+		if (printmaxtime_ms)
+			(void)printf(" showing only pings > %d ms", printmaxtime_ms);
 		if (source)
 			(void)printf(" from %s", shostname);
 		if (sweepmax)
@@ -823,7 +833,7 @@ main(argc, argv)
 			    sweepmin, sweepmax);
 		else 
 			(void)printf(": %d data bytes\n", datalen);
-		
+
 	} else {
 		if (sweepmax)
 			(void)printf("PING %s: (%d ... %d) data bytes\n",
@@ -974,14 +984,33 @@ main(argc, argv)
 				nmissedmax = ntransmitted - nreceived - 1;
 				if (options & F_MISSED)
 					(void)write(STDOUT_FILENO, &BBELL, 1);
-				if (!(options & F_QUIET))
-					printf("Request timeout for icmp_seq %ld\n", ntransmitted - 2);
+				if (!(options & F_QUIET)) {
+					if (printmaxtime_ms > 0) {
+						char outstr[200];
+
+						if (!downsince)
+							downsince = time(NULL);
+						(void)printf("\r%s (%s) DOWN: %ld s, total: %ld     ",
+							timebufnow(outstr,sizeof(outstr),downsince), target, time(NULL)-downsince , nmissedmax); fflush(stdout);
+					} else
+						printf("Request timeout for icmp_seq %ld\n", ntransmitted - 2);
+				}
 			}
 		}
 	}
 	finish();
 	/* NOTREACHED */
 	exit(0);	/* Make the compiler happy */
+}
+
+static char *timebufnow(char *outstr, int len, time_t now)
+{
+	struct tm *tmp;
+
+	if (!now) now = time(NULL);
+	tmp = localtime(&now);
+	strftime(outstr, len, "%a, %d %b %Y %T %z", tmp);
+	return outstr;
 }
 
 /*
@@ -1067,7 +1096,14 @@ pinger(void)
 				usleep(FLOOD_BACKOFF);
 				return;
 			}
-			warn("sendto");
+			if (printmaxtime_ms==0) {
+				warn("sendto");
+			} else {
+				if ((errno!=64)&&(errno!=65)) {
+					fprintf(stderr,"\nErrno: %d ", errno);
+					warn("sendto");
+				}
+			}
 		} else {
 			warn("%s: partial write: %d of %d bytes",
 			     hostname, i, cc);
@@ -1098,7 +1134,7 @@ pr_pack(buf, cc, from, tv)
 	struct icmp *icp;
 	struct ip *ip;
 	const void *tp;
-	double triptime;
+	double triptime=0.0;
 	int dupflag, hlen, i, j, recv_len, seq;
 	static int old_rrlen;
 	static char old_rr[MAX_IPOPTLEN];
@@ -1171,16 +1207,29 @@ pr_pack(buf, cc, from, tv)
 
 		if (options & F_FLOOD)
 			(void)write(STDOUT_FILENO, &BSPACE, 1);
-		else {
-			(void)printf("%d bytes from %s: icmp_seq=%u", cc,
-			   inet_ntoa(*(struct in_addr *)&from->sin_addr.s_addr),
-			   seq);
-			(void)printf(" ttl=%d", ip->ip_ttl);
-			if (timing)
-				(void)printf(" time=%.3f ms", triptime);
-			if (dupflag) {
-				if (!IN_MULTICAST(ntohl(whereto.sin_addr.s_addr)))
-					(void)printf(" (DUP!)");
+		else if ( triptime >= printmaxtime_ms ) {
+			if (downsince>0) {
+				char outstr[200];
+
+				downtime+=downsince;
+				printf("\n%s (%s) UP.  Down for %ld s, total downtime: %ld\n", timebufnow(outstr, sizeof(outstr), 0), target, time(NULL)-downsince, downtime);
+				downsince = 0;
+			}
+			if (printmaxtime_ms) {
+				char t[200];
+				(void)printf("%s (%s) %.3f ms > %d.0 ms",
+					timebufnow(t,sizeof(t),0), target, triptime, printmaxtime_ms );
+			} else {
+				(void)printf("%d bytes from %s: icmp_seq=%u", cc,
+				   inet_ntoa(*(struct in_addr *)&from->sin_addr.s_addr),
+				   seq);
+				(void)printf(" ttl=%d", ip->ip_ttl);
+				if (timing)
+					(void)printf(" time=%.3f ms", triptime);
+				if (dupflag) {
+					if (!IN_MULTICAST(ntohl(whereto.sin_addr.s_addr)))
+						(void)printf(" (DUP!)");
+				}
 			}
 			if (options & F_AUDIBLE)
 				(void)write(STDOUT_FILENO, &BBELL, 1);
@@ -1346,7 +1395,7 @@ pr_pack(buf, cc, from, tv)
 			(void)printf("\nunknown option %x", *cp);
 			break;
 		}
-	if (!(options & F_FLOOD)) {
+	if (!(options & F_FLOOD) && ( triptime >= printmaxtime_ms )) {
 		(void)putchar('\n');
 		(void)fflush(stdout);
 	}
