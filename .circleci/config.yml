@@ -11,4 +11,4 @@ jobs:
           command: 'make'
       - run:
           name: Run cping
-          command: './cping'
+          command: './cping -c 5 localhost'
