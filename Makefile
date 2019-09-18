@@ -12,7 +12,7 @@ ADDLIB=
 #options if you compile with libc5, and without a bind>=4.9.4 libresolv
 # NOT AVAILABLE. Please, use libresolv.
 
-CC=gcc
+CC=gcc -static
 # What a pity, all new gccs are buggy and -Werror does not work. Sigh.
 #CCOPT=-D_GNU_SOURCE -O2 -Wstrict-prototypes -Wall -g -Werror
 CCOPT=-D_GNU_SOURCE -O2 -Wstrict-prototypes -Wall -g
