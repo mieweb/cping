@@ -4,12 +4,11 @@ jobs:
   build:
     docker:
       - image: "circleci/buildpack-deps"
-    working_directory: /tmp
     steps:
       - checkout
       - run:
           name: Run Make
           command: 'make'
       - store_artifacts:
-          path: /tmp/cping
+          path: cping
           destination: cping
