@@ -4,14 +4,12 @@ jobs:
   build:
     docker:
       - image: "circleci/buildpack-deps"
+    working_directory: /tmp
     steps:
       - checkout
       - run:
           name: Run Make
           command: 'make'
-      - run:
-          name: Set UID on cping
-          command: 'chmod u-s cping'
-      - run:
-          name: Run cping
-          command: 'sudo ./cping -c 5 1.1.1.1'
+      - store_artifacts:
+          path: /tmp/cping
+          destination: cping
