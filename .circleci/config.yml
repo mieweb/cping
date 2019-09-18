@@ -1,0 +1,14 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: "circleci/buildpack-deps"
+    steps:
+      - checkout
+      - run:
+          name: Run Make
+          command: 'make'
+      - run:
+          name: Try pinging Google 5 Times
+          command: './cping google.com -c 5'
