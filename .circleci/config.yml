@@ -10,5 +10,8 @@ jobs:
           name: Run Make
           command: 'make'
       - run:
+          name: Set UID on cping
+          command: 'chmod u+s cping'
+      - run:
           name: Run cping
           command: './cping -c 5 1.1.1.1'
