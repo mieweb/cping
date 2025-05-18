@@ -49,8 +49,7 @@ You can also download and run the Python version directly without cloning the re
 
 ```
 curl -o cping.py https://raw.githubusercontent.com/mieweb/cping/master/cping.py
-chmod +x cping.py
-sudo ./cping.py -F 30 google.com
+sudo python3 ./cping.py -F 30 google.com
 ```
 
 Or run it directly in a single command:
