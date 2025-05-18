@@ -34,11 +34,71 @@ Mar 28 23:47:48 2014 Missing pings.  Down for 8.324291 secs
 12 packets transmitted, 0 received, +9 errors, 100% packet loss, time 10994ms
 ```
 
+## Implementations ##
+
+cping is available in both Python and C implementations:
+
+### Python Implementation ###
+The Python version (`cping.py`) requires Python 3 and provides platform-independent functionality. It's easy to use without compilation:
+
+```
+$ sudo python3 cping.py -F 30 google.com
+```
+
+You can also download and run the Python version directly without cloning the repository:
+
+```
+$ curl -o cping.py https://raw.githubusercontent.com/mieweb/cping/master/cping.py
+$ chmod +x cping.py
+$ sudo ./cping.py -F 30 google.com
+```
+
+Or run it directly in a single command:
+
+```
+$ sudo python3 <(curl -s https://raw.githubusercontent.com/mieweb/cping/master/cping.py) -F 30 google.com
+```
+
+**Note:** Root privileges (sudo) are required to create ICMP sockets used for ping functionality.
+
+### C Implementation ###
+The C implementation offers better performance and is compiled for specific platforms:
+
+```
+$ sudo cping -F 30 google.com
+```
+
+**Note:** Root privileges (sudo) are required to create ICMP sockets used for ping functionality.
+
 ## Install ##
 git clone this project
 
+```
+$ git clone https://github.com/mieweb/cping.git
+$ cd cping
+```
+
 ### Linux ###
-The main folder, run make.
+In the main folder, run make:
+
+```
+$ make
+```
 
 ### Mac OSX ###
-cd osx; make
+For macOS, use the OSX-specific version:
+
+```
+$ cd osx
+$ make
+```
+
+## Requirements ##
+
+### Python Version ###
+- Python 3.x
+- Root/sudo privileges for ICMP socket access
+
+### C Version ###
+- Linux: gcc compiler, standard C libraries, root/sudo privileges
+- macOS: Xcode command line tools, root/sudo privileges
