@@ -42,21 +42,21 @@ cping is available in both Python and C implementations:
 The Python version (`cping.py`) requires Python 3 and provides platform-independent functionality. It's easy to use without compilation:
 
 ```
-$ sudo python3 cping.py -F 30 google.com
+sudo python3 cping.py -F 30 google.com
 ```
 
 You can also download and run the Python version directly without cloning the repository:
 
 ```
-$ curl -o cping.py https://raw.githubusercontent.com/mieweb/cping/master/cping.py
-$ chmod +x cping.py
-$ sudo ./cping.py -F 30 google.com
+curl -o cping.py https://raw.githubusercontent.com/mieweb/cping/master/cping.py
+chmod +x cping.py
+sudo ./cping.py -F 30 google.com
 ```
 
 Or run it directly in a single command:
 
 ```
-$ sudo python3 <(curl -s https://raw.githubusercontent.com/mieweb/cping/master/cping.py) -F 30 google.com
+sudo python3 <(curl -s https://raw.githubusercontent.com/mieweb/cping/master/cping.py) -F 30 google.com
 ```
 
 **Note:** Root privileges (sudo) are required to create ICMP sockets used for ping functionality.
@@ -65,7 +65,7 @@ $ sudo python3 <(curl -s https://raw.githubusercontent.com/mieweb/cping/master/c
 The C implementation offers better performance and is compiled for specific platforms:
 
 ```
-$ sudo cping -F 30 google.com
+sudo cping -F 30 google.com
 ```
 
 **Note:** Root privileges (sudo) are required to create ICMP sockets used for ping functionality.
@@ -74,23 +74,23 @@ $ sudo cping -F 30 google.com
 git clone this project
 
 ```
-$ git clone https://github.com/mieweb/cping.git
-$ cd cping
+git clone https://github.com/mieweb/cping.git
+cd cping
 ```
 
 ### Linux ###
 In the main folder, run make:
 
 ```
-$ make
+make
 ```
 
 ### Mac OSX ###
 For macOS, use the OSX-specific version:
 
 ```
-$ cd osx
-$ make
+cd osx
+make
 ```
 
 ## Requirements ##
